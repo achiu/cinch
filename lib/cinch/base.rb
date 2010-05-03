@@ -261,10 +261,15 @@ module Cinch
       message.irc = @irc
       puts message if options.verbose
 
-      # runs on any symbol
-      @listeners[:any].each { |l| l.call(message) } if @listeners.key?(:any)
 
-      if @listeners.key?(message.symbol)
+      case
+      when @listeners.key?(:messages) and [:privmsg, :topic, :motd, :notice].include?(message.symbol)
+        @listeners[:messages].each { |l| l.call(message) }
+      when @listeners.key?(:chan) and [:join, :part, :invite, :kick].include?(message.symbol)
+        @listeners[:chan].each { |l| l.call(message) }
+      when @listeners.key?(:any)
+        @listeners[:any].each { |l| l.call(message) }
+      when @listeners.key?(message.symbol)
         @listeners[message.symbol].each {|l| l.call(message) }
       end
 
